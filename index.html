@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz do Amor</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ff4f8b, #ff9ecb, #ffd1dc, #ff6f91);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .hearts { position: fixed; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index:0; pointer-events:none; }
+    .heart { position:absolute; bottom:-80px; color:rgba(255,255,255,0.75); animation:subir linear infinite; }
+
+    @keyframes subir {
+      0% { transform: translateY(0) rotate(0deg); opacity:0; }
+      10% { opacity:1; }
+      100% { transform: translateY(-120vh) rotate(360deg); opacity:0; }
+    }
+
+    .container {
+      position: relative;
+      z-index:1;
+      width:90%;
+      max-width:650px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding:40px 30px;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(12px);
+      border-radius:30px;
+      text-align:center;
+    }
+
+    .page { display:none; }
+    .page.active { display:block; }
+
+    .login-page {
+      background: #d9d9d9;
+      color: #222;
+      border-radius: 18px;
+      padding: 30px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .login-page h1 {
+      color: #111;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      text-shadow: none;
+    }
+
+    .login-page p {
+      color: #555;
+    }
+
+    .login-page .password-input {
+      background: #fff;
+      border: 1px solid #ccc;
+      color: #111;
+      box-shadow: none;
+    }
+
+    .login-page button {
+      background: #222;
+      color: #fff;
+      box-shadow: none;
+    }
+
+    .login-page button:hover {
+      background: #444;
+    }
+
+    .login-page .message {
+      color: #333;
+    }
+
+    h1 { font-size:2.5rem; margin-bottom:15px; }
+    h2 { margin-bottom:20px; }
+    p { margin-bottom:20px; }
+
+    button {
+      border:none;
+      padding:12px 20px;
+      margin:8px;
+      border-radius:999px;
+      cursor:pointer;
+      background:#fff;
+      color:#b0004b;
+      font-weight:bold;
+    }
+
+    button:hover { background:#ffe6f0; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .message { margin-top:15px; font-weight:bold; }
+
+    .pause-music-btn {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 50;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      margin: 0;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #b0004b;
+      box-shadow: 0 8px 20px rgba(130, 0, 60, 0.25);
+    }
+
+    .controls {
+      margin-top:20px;
+      background: rgba(255,255,255,0.2);
+      padding:15px;
+      border-radius:15px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    .envelope-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 25px auto;
+      min-height: 260px;
+      cursor: pointer;
+    }
+
+    .envelope {
+      position: relative;
+      width: 330px;
+      height: 210px;
+      animation: flutuar 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes flutuar {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+
+    .front {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 170px;
+      background: linear-gradient(135deg, #fff0f7, #ffc1d9);
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0 12px 25px rgba(150, 0, 80, 0.25);
+      z-index: 3;
+    }
+
+    .front::before,
+    .front::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      border-style: solid;
+    }
+
+    .front::before {
+      left: 0;
+      border-width: 85px 165px 85px 0;
+      border-color: transparent rgba(255, 140, 185, 0.6) transparent transparent;
+    }
+
+    .front::after {
+      right: 0;
+      border-width: 85px 0 85px 165px;
+      border-color: transparent transparent transparent rgba(255, 120, 175, 0.6);
+    }
+
+    .flap {
+      position: absolute;
+      top: 40px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 165px solid transparent;
+      border-right: 165px solid transparent;
+      border-top: 115px solid #ffe3ef;
+      transform-origin: top;
+      transition: 1s;
+      z-index: 4;
+    }
+
+    .letter {
+      position: absolute;
+      left: 22px;
+      bottom: 20px;
+      width: 286px;
+      min-height: 220px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 18px;
+      padding: 10px;
+      transform: translateY(55px) scale(0.85);
+      opacity: 0;
+      transition: 1s;
+      z-index: 2;
+      box-shadow: 0 10px 25px rgba(130, 0, 70, 0.25);
+    }
+
+    .letter video {
+      width: 100%;
+      height: 170px;
+      border-radius: 14px;
+      object-fit: cover;
+    }
+
+    .heart-seal {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2rem;
+      z-index: 5;
+      transition: 0.6s;
+    }
+
+    .envelope.open .flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+
+    .envelope.open .letter {
+      transform: translateY(-120px) scale(1.05);
+      opacity: 1;
+      z-index: 6;
+    }
+
+    .envelope.open .heart-seal {
+      opacity: 0;
+      transform: translateX(-50%) scale(0.2);
+    }
+
+    #btnDepoisVideo {
+      display: none;
+      margin-top: 10px;
+      animation: aparecerBotao 0.6s ease;
+    }
+
+    .hint-image {
+      display: none;
+      width: 220px;
+      max-height: 220px;
+      object-fit: cover;
+      margin: 12px auto;
+      border-radius: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 25px rgba(130, 0, 70, 0.25);
+      animation: aparecerBotao 0.4s ease;
+    }
+
+    .love-meter {
+      position: relative;
+      width: 230px;
+      height: 230px;
+      margin: 25px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .heart-shape {
+      position: absolute;
+      font-size: 11rem;
+      cursor: pointer;
+      z-index: 3;
+      user-select: none;
+      filter: drop-shadow(0 12px 22px rgba(130, 0, 70, 0.35));
+      transition: 0.12s;
+    }
+
+    .heart-shape:active { transform: scale(0.9); }
+
+    .heart-fill {
+      position: absolute;
+      bottom: 33px;
+      width: 170px;
+      height: 0%;
+      max-height: 160px;
+      background: linear-gradient(180deg, #ff9ecb, #ff2f7d);
+      border-radius: 0 0 90px 90px;
+      z-index: 2;
+      opacity: 0.85;
+      transition: height 0.15s;
+      pointer-events: none;
+    }
+
+    .love-percent {
+      position: absolute;
+      z-index: 4;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 3px 10px rgba(120, 0, 60, 0.7);
+      pointer-events: none;
+    }
+
+    .big-love-message {
+      display: none;
+      font-size: 2rem;
+      font-weight: bold;
+      line-height: 1.3;
+      text-shadow: 0 4px 14px rgba(130, 0, 70, 0.45);
+      animation: aparecerBotao 0.7s ease;
+    }
+
+    .typing-text {
+      min-height: 170px;
+      font-size: 1.35rem;
+      line-height: 1.7;
+      font-weight: bold;
+      text-shadow: 0 4px 14px rgba(130, 0, 70, 0.45);
+      white-space: pre-line;
+    }
+
+    .password-input {
+      width: 85%;
+      max-width: 360px;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 999px;
+      margin: 10px 0;
+      outline: none;
+      font-size: 1rem;
+      text-align: center;
+      color: #b0004b;
+      font-weight: bold;
+    }
+
+    .hint-password {
+      margin-top: 14px;
+      font-weight: bold;
+      font-size: 1.05rem;
+      color: #fffbe8;
+      text-shadow: 0 3px 10px rgba(120, 0, 60, 0.5);
+    }
+
+    .paper-letter {
+      width: 92%;
+      max-height: 430px;
+      overflow-y: auto;
+      margin: 20px auto;
+      padding: 30px;
+      background: #fffaf0;
+      color: #4b2b2b;
+      border-radius: 12px;
+      text-align: left;
+      line-height: 1.8;
+      font-size: 1.05rem;
+      box-shadow: 0 12px 30px rgba(120, 0, 60, 0.25);
+      border: 1px solid rgba(120, 0, 60, 0.15);
+    }
+
+    .paper-letter p {
+      margin-bottom: 18px;
+    }
+
+    .puzzle-board {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 4px;
+      background: rgba(255,255,255,0.35);
+      padding: 6px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(130, 0, 70, 0.25);
+    }
+
+    .puzzle-piece {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      background-size: 300px 300px;
+      cursor: grab;
+      border: 2px solid rgba(255,255,255,0.7);
+      transition: 0.2s;
+    }
+
+    .puzzle-piece:hover { transform: scale(1.04); }
+
+    @keyframes aparecerBotao {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <button class="pause-music-btn" id="pauseBtn" onclick="pausarOuDespausarMusica()">▶</button>
+
+  <audio id="musica" loop>
+    <source src="musica.mp3" type="audio/mpeg" />
+  </audio>
+
+  <main class="container">
+
+    <section class="page active login-page" id="pageLogin">
+      <h1>Acesso</h1>
+      <p>Digite o usuário e a senha para continuar.</p>
+
+      <input class="password-input" id="usuarioLogin" type="text" placeholder="Usuário">
+      <br>
+      <input class="password-input" id="senhaLogin" type="password" placeholder="Senha">
+      <br>
+      <button onclick="verificarLogin()">Entrar</button>
+      <p class="message" id="loginMsg"></p>
+    </section>
+
+    <section class="page" id="page0">
+      <h1>💖 Quiz do Amor 💖</h1>
+      <p>Preparei um quiz especial para você ❤️</p>
+      <button onclick="comecarQuiz()">Começar 💘</button>
+
+      <div class="controls">
+        <p>🎵 Controle da música</p>
+        <label>Volume 🔊</label>
+        <input type="range" min="0" max="1" step="0.01" id="volumeControl" value="0.5">
+        <label>Tempo da música ⏱</label>
+        <input type="range" min="0" max="100" step="1" id="timeControl">
+      </div>
+    </section>
+
+    <section class="page" id="page1">
+      <h2>Primeira pergunta 💌</h2>
+      <p>Qual sua primeira mensagem na minha live?</p>
+      <button onclick="responder(1, false)">eai tudo bem?</button>
+      <button onclick="responder(1, true)">cheguei no fim da live</button>
+      <button onclick="responder(1, false)">joga muito</button>
+      <button onclick="responder(1, false)">GG</button>
+      <div class="message" id="msg1"></div>
+    </section>
+
+    <section class="page" id="page2">
+      <h2>Segunda pergunta 💞</h2>
+      <p>Que dia começamos a conversar?</p>
+      <button onclick="responder(2, false)">18/08/2025</button>
+      <button onclick="responder(2, false)">08/08/2025</button>
+      <button onclick="responder(2, true)">28/08/2025</button>
+      <button onclick="responder(2, false)">26/08/2025</button>
+      <div class="message" id="msg2"></div>
+    </section>
+
+    <section class="page" id="page3">
+      <h2>Terceira pergunta 💗</h2>
+      <p>Qual foi o primeiro jogo que te apresentei?</p>
+      <button onclick="responder(3, false)">Overcooked</button>
+      <button onclick="responder(3, false)">Apex Legends</button>
+      <button onclick="responder(3, true)">Split Fiction</button>
+      <button onclick="responder(3, false)">Minecraft</button>
+      <div class="message" id="msg3"></div>
+    </section>
+
+    <section class="page" id="page4">
+      <h2>Quarta pergunta 💘</h2>
+      <p>Qual foi o primeiro presente que você recebeu de mim?</p>
+      <button onclick="responder(4, false)">Tênis</button>
+      <button onclick="responder(4, true)">Skin</button>
+      <button onclick="responder(4, false)">Camisas</button>
+      <button onclick="responder(4, false)">Lanche</button>
+      <div class="message" id="msg4"></div>
+    </section>
+
+    <section class="page" id="page5">
+      <h2>Quinta pergunta 💘</h2>
+      <p>Em qual aplicativo começamos a conversar a sós?</p>
+      <button onclick="responder(5, false)">Instagram</button>
+      <button onclick="responder(5, true)">Discord</button>
+      <button onclick="responder(5, false)">Twitch</button>
+      <button onclick="responder(5, false)">Whatsapp</button>
+      <div class="message" id="msg5"></div>
+    </section>
+
+    <section class="page" id="page6">
+      <h2>Sexta pergunta 💘</h2>
+      <p>Que dia foi nosso primeiro EU TE AMO?</p>
+      <button onclick="responder(6, false)">16/09/2025</button>
+      <button onclick="responder(6, false)">28/09/2025</button>
+      <button onclick="responder(6, false)">23/09/2025</button>
+      <button onclick="responder(6, true)">26/09/2025</button>
+      <div class="message" id="msg6"></div>
+    </section>
+
+    <section class="page" id="page7">
+      <h2>Sétima pergunta 💘</h2>
+      <p>Qual foi o nosso primeiro apelido?</p>
+      <button onclick="responder(7, false)">amor</button>
+      <button onclick="responder(7, true)">gatinho(a)</button>
+      <button onclick="responder(7, false)">denguinho</button>
+      <button onclick="responder(7, false)">momô</button>
+      <div class="message" id="msg7"></div>
+    </section>
+
+    <section class="page" id="page8">
+      <h2>Oitava pergunta 💘</h2>
+      <p>Que dia colocamos a # combinando?</p>
+      <button onclick="responder(8, true)">26/09/2025</button>
+      <button onclick="responder(8, false)">30/09/2025</button>
+      <button onclick="responder(8, false)">24/10/2025</button>
+      <button onclick="responder(8, false)">13/10/2025</button>
+      <div class="message" id="msg8"></div>
+    </section>
+
+    <section class="page" id="page9">
+      <h2>Nona pergunta 💘</h2>
+      <p>Qual o tema da nossa primeira foto combinando no Discord?</p>
+      <button onclick="responder(9, false)">anime</button>
+      <button onclick="responder(9, false)">série</button>
+      <button onclick="responder(9, false)">desenho</button>
+      <button onclick="responder(9, true)">gatinhos</button>
+      <div class="message" id="msg9"></div>
+    </section>
+
+    <section class="page" id="page10">
+      <h1>❤️ Você venceu ❤️</h1>
+      <p>Antes da surpresa final, complete os desafios 💖</p>
+      <button onclick="iniciarPuzzle(1)">Começar quebra-cabeça 🧩</button>
+    </section>
+
+    <section class="page puzzle-page" id="page11">
+      <h1>🧩 Quebra-cabeça 1</h1>
+      <p>Monte a imagem para continuar 💖</p>
+      <button onclick="mostrarDica(1)">Dica 👀</button>
+      <img class="hint-image" id="hint1" src="puzzle1.png" alt="Dica do quebra-cabeça 1">
+      <div class="puzzle-board" id="puzzle1"></div>
+      <p class="message" id="puzzleMsg1"></p>
+      <button id="nextPuzzle1" style="display:none;" onclick="iniciarPuzzle(2)">Próximo quebra-cabeça 💕</button>
+    </section>
+
+    <section class="page puzzle-page" id="page12">
+      <h1>🧩 Quebra-cabeça 2</h1>
+      <p>Mais um pedacinho da surpresa 💘</p>
+      <button onclick="mostrarDica(2)">Dica 👀</button>
+      <img class="hint-image" id="hint2" src="puzzle2.png" alt="Dica do quebra-cabeça 2">
+      <div class="puzzle-board" id="puzzle2"></div>
+      <p class="message" id="puzzleMsg2"></p>
+      <button id="nextPuzzle2" style="display:none;" onclick="iniciarPuzzle(3)">Próximo quebra-cabeça 💕</button>
+    </section>
+
+    <section class="page puzzle-page" id="page13">
+      <h1>🧩 Quebra-cabeça 3</h1>
+      <p>Último pedacinho antes de mais uma fase 💌</p>
+      <button onclick="mostrarDica(3)">Dica 👀</button>
+      <img class="hint-image" id="hint3" src="puzzle3.png" alt="Dica do quebra-cabeça 3">
+      <div class="puzzle-board" id="puzzle3"></div>
+      <p class="message" id="puzzleMsg3"></p>
+      <button id="nextPuzzle3" style="display:none;" onclick="iniciarPuzzle(4)">Próximo quebra-cabeça 💕</button>
+    </section>
+
+    <section class="page puzzle-page" id="page14">
+      <h1>🧩 Quebra-cabeça 4</h1>
+      <p>Último desafio antes da surpresa 💌</p>
+      <button onclick="mostrarDica(4)">Dica 👀</button>
+      <img class="hint-image" id="hint4" src="puzzle4.png" alt="Dica do quebra-cabeça 4">
+      <div class="puzzle-board" id="puzzle4"></div>
+      <p class="message" id="puzzleMsg4"></p>
+      <button id="nextPuzzle4" style="display:none;" onclick="iniciarBarraAmor()">Próximo desafio ❤️</button>
+    </section>
+
+    <section class="page" id="page15">
+      <h1>❤️ Medidor de Amor ❤️</h1>
+      <p>Clique no coração o mais rápido possível para encher de amor!</p>
+      <div class="love-meter">
+        <div class="heart-fill" id="heartFill"></div>
+        <div class="heart-shape" onclick="clicarCoracao()">❤️</div>
+        <span class="love-percent" id="lovePercent">0%</span>
+      </div>
+      <p class="big-love-message" id="bigLoveMessage"></p>
+      <button id="btnIrTexto" style="display:none;" onclick="iniciarTextoDigitando()">Continuar 💌</button>
+    </section>
+
+    <section class="page" id="page16">
+      <h1>💌 Antes da surpresa...</h1>
+      <p class="typing-text" id="typingText"></p>
+      <button id="btnIrSenha" style="display:none;" onclick="mostrarPagina(17)">Continuar para a senha 🔐</button>
+    </section>
+
+    <section class="page" id="page17">
+      <h1>🔐 Senha secreta</h1>
+      <p>Digite a senha para desbloquear a surpresa final 💖</p>
+      <input class="password-input" id="senhaInput" type="text" placeholder="Digite a senha aqui...">
+      <br>
+      <button onclick="verificarSenha()">Desbloquear 💘</button>
+      <button id="btnDicaSenha" onclick="mostrarDicaSenha()">Dica 💡 (5)</button>
+      <p class="message" id="senhaMsg"></p>
+      <p class="hint-password" id="senhaDica"></p>
+    </section>
+
+    <section class="page" id="page18">
+      <h1>💌 Uma surpresa para você 💌</h1>
+      <p>Clique na cartinha para abrir meu vídeo especial.</p>
+      <div class="envelope-area" onclick="abrirCarta()">
+        <div class="envelope" id="envelope">
+          <div class="flap"></div>
+          <div class="letter">
+            <video id="videoSurpresa" controls>
+              <source src="video.mp4" type="video/mp4">
+              Seu navegador não suporta vídeo.
+            </video>
+            <button id="btnDepoisVideo" onclick="irParaCartaFinal()">Ler minha carta 💌</button>
+          </div>
+          <div class="front"></div>
+          <div class="heart-seal">❤️</div>
+        </div>
+      </div>
+      <button onclick="reiniciar()">Voltar ao início</button>
+    </section>
+
+    <section class="page" id="page19">
+      <h1>💌 Minha carta para você</h1>
+      <div class="paper-letter">
+        <p>Meu amor,</p>
+
+        <p>Se você chegou até aqui, é porque passou por cada perguntinha, cada desafio, cada pedacinho desse site que eu fiz pensando em você. Eu queria que tudo isso fosse mais do que apenas um quiz ou uma surpresa. Eu queria que fosse uma forma diferente de te mostrar o quanto você é especial pra mim.</p>
+
+        <p>Desde que você apareceu na minha vida, muita coisa ficou mais leve, mais bonita e mais feliz. Gosto do seu jeito, das nossas conversas, das nossas brincadeiras, dos detalhes pequenos que só a gente entende e de como você consegue deixar meus dias melhores só por existir neles.</p>
+
+        <p>Eu amo lembrar do começo de tudo, das primeiras conversas, dos momentos em que a gente foi se aproximando, das risadas, dos apelidos, das mensagens e de cada coisinha que foi construindo o que somos hoje. Parece simples, mas pra mim tudo isso tem um valor enorme.</p>
+
+        <p>Você é meu denguinho, meu carinho, meu lugar bom. Eu gosto de cuidar de você, de te mimar, de te provocar, de te fazer rir e de te lembrar que você é amado. Mesmo nos dias comuns, você consegue ser uma das partes mais especiais da minha vida.</p>
+
+        <p>Eu fiz essa carta para você ler com calma e sentir, em cada linha, um pouquinho do tamanho do meu amor. Talvez eu não consiga colocar tudo em palavras, porque o que eu sinto por você é muito maior do que qualquer texto, mas eu espero que você consiga sentir daqui.</p>
+
+        <p>Obrigada por ser você. Obrigada por fazer parte da minha vida. Obrigada por cada momento, cada conversa, cada lembrança e cada sorriso. Eu te amo muito, muito mesmo, e escolheria você de novo em todos os caminhos possíveis.</p>
+
+        <p>Com todo o meu amor,</p>
+        <p><strong>Da pessoa que te ama demais ❤️</strong></p>
+      </div>
+      <button onclick="mostrarPagina(20)">Finalizar 💖</button>
+      <button onclick="voltarParaVideo()">Assistir vídeo novamente 🎥</button>
+    </section>
+
+    <section class="page" id="page20">
+      <h1>💖 Última surpresa 💖</h1>
+      <p>Agora você sabe o quanto é especial pra mim. Te amo muito! 💌</p>
+      <button onclick="reiniciar()">Voltar ao início</button>
+    </section>
+
+  </main>
+
+  <script>
+    const musica = document.getElementById('musica');
+    const volumeControl = document.getElementById('volumeControl');
+    const timeControl = document.getElementById('timeControl');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const videoSurpresa = document.getElementById('videoSurpresa');
+    const btnDepoisVideo = document.getElementById('btnDepoisVideo');
+
+    const usuarioCorreto = 'denguinho';
+    const senhaLoginCorreta = 'teamo';
+
+    function verificarLogin() {
+      const usuario = document.getElementById('usuarioLogin').value.toLowerCase().trim();
+      const senha = document.getElementById('senhaLogin').value.toLowerCase().trim();
+      const loginMsg = document.getElementById('loginMsg');
+
+      if (usuario === usuarioCorreto && senha === senhaLoginCorreta) {
+        loginMsg.innerHTML = 'Acesso liberado 💖';
+        setTimeout(() => mostrarPagina(0), 700);
+      } else {
+        loginMsg.innerHTML = 'Usuário ou senha incorretos 😅';
+      }
+    }
+
+    musica.volume = 0.5;
+
+    function atualizarBotaoMusica() {
+      pauseBtn.innerHTML = musica.paused ? '▶' : '⏸';
+    }
+
+    function pausarOuDespausarMusica() {
+      if (musica.paused) {
+        musica.play().catch(() => console.log('Clique em Começar primeiro para liberar a música.'));
+      } else {
+        musica.pause();
+      }
+      atualizarBotaoMusica();
+    }
+
+    function mostrarPagina(n) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+      const pagina = document.getElementById('page' + n);
+      if (pagina) pagina.classList.add('active');
+
+      const hearts = document.getElementById('hearts');
+
+      if (n === 'Login') {
+        hearts.style.display = 'none';
+        document.body.style.background = '#cfcfcf';
+        document.querySelector('.container').style.background = '#cfcfcf';
+      } else {
+        hearts.style.display = 'block';
+        document.body.style.background = 'linear-gradient(135deg, #ff4f8b, #ff9ecb, #ffd1dc, #ff6f91)';
+        document.querySelector('.container').style.background = 'rgba(255,255,255,0.18)';
+      }
+    }
+
+    function comecarQuiz() {
+      musica.play().catch(() => console.log('O navegador bloqueou a música até a interação.'));
+      atualizarBotaoMusica();
+      mostrarPagina(1);
+    }
+
+    function responder(p, correta) {
+      const msg = document.getElementById('msg' + p);
+      if (correta) {
+        msg.innerHTML = 'Acertou 💖';
+        setTimeout(() => mostrarPagina(p + 1), 800);
+      } else {
+        msg.innerHTML = 'Errado 😅 tenta de novo!';
+      }
+    }
+
+    function reiniciar() {
+      const envelope = document.getElementById('envelope');
+
+      for (let i = 1; i <= 4; i++) {
+        const nextBtn = document.getElementById('nextPuzzle' + i);
+        const msg = document.getElementById('puzzleMsg' + i);
+        const hint = document.getElementById('hint' + i);
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (msg) msg.innerHTML = '';
+        if (hint) hint.style.display = 'none';
+      }
+
+      if (envelope) envelope.classList.remove('open');
+      if (videoSurpresa) {
+        videoSurpresa.pause();
+        videoSurpresa.currentTime = 0;
+      }
+      if (btnDepoisVideo) btnDepoisVideo.style.display = 'none';
+
+      amor = 0;
+      const heartFill = document.getElementById('heartFill');
+      const lovePercent = document.getElementById('lovePercent');
+      const bigLoveMessage = document.getElementById('bigLoveMessage');
+      const btnIrTexto = document.getElementById('btnIrTexto');
+      if (heartFill) heartFill.style.height = '0%';
+      if (lovePercent) lovePercent.innerHTML = '0%';
+      if (bigLoveMessage) {
+        bigLoveMessage.style.display = 'none';
+        bigLoveMessage.innerHTML = '';
+      }
+      if (btnIrTexto) btnIrTexto.style.display = 'none';
+
+      clearInterval(typingInterval);
+      const typingText = document.getElementById('typingText');
+      const btnIrSenha = document.getElementById('btnIrSenha');
+      const senhaInput = document.getElementById('senhaInput');
+      const senhaMsg = document.getElementById('senhaMsg');
+      const senhaDica = document.getElementById('senhaDica');
+
+      if (typingText) typingText.innerHTML = '';
+      if (btnIrSenha) btnIrSenha.style.display = 'none';
+      if (senhaInput) senhaInput.value = '';
+      if (senhaMsg) senhaMsg.innerHTML = '';
+      if (senhaDica) senhaDica.innerHTML = '';
+      dicaAtual = 0;
+      const btnDica = document.getElementById('btnDicaSenha');
+      if (btnDica) {
+        btnDica.innerHTML = 'Dica 💡 (5)';
+        btnDica.disabled = false;
+      }
+
+      mostrarPagina(0);
+    }
+
+    const puzzleImages = {
+      1: 'puzzle1.png',
+      2: 'puzzle2.png',
+      3: 'puzzle3.png',
+      4: 'puzzle4.png'
+    };
+
+    function iniciarPuzzle(numero) {
+      mostrarPagina(numero + 10);
+      criarPuzzle(numero);
+
+      const hint = document.getElementById('hint' + numero);
+      if (hint) hint.style.display = 'none';
+    }
+
+    function mostrarDica(numero) {
+      const hint = document.getElementById('hint' + numero);
+      if (!hint) return;
+
+      hint.style.display = 'block';
+
+      setTimeout(() => {
+        hint.style.display = 'none';
+      }, 5000);
+    }
+
+    function criarPuzzle(numero) {
+      const board = document.getElementById('puzzle' + numero);
+      const msg = document.getElementById('puzzleMsg' + numero);
+      const nextBtn = document.getElementById('nextPuzzle' + numero);
+
+      if (!board || !msg || !nextBtn) return;
+
+      board.innerHTML = '';
+      msg.innerHTML = '';
+      nextBtn.style.display = 'none';
+
+      let pecas = [];
+      for (let i = 0; i < 16; i++) {
+        pecas.push(i);
+      }
+
+      pecas = pecas.sort(() => Math.random() - 0.5);
+
+      pecas.forEach((posicaoOriginal, indexAtual) => {
+        const piece = document.createElement('div');
+        piece.className = 'puzzle-piece';
+        piece.draggable = true;
+        piece.dataset.original = posicaoOriginal;
+        piece.dataset.atual = indexAtual;
+
+        const tamanho = 300 / 4;
+        const x = (posicaoOriginal % 4) * -tamanho;
+        const y = Math.floor(posicaoOriginal / 4) * -tamanho;
+
+        piece.style.backgroundImage = `url('${puzzleImages[numero]}')`;
+        piece.style.backgroundPosition = `${x}px ${y}px`;
+
+        piece.addEventListener('dragstart', arrastar);
+        piece.addEventListener('dragover', permitirSoltar);
+        piece.addEventListener('drop', soltar);
+
+        board.appendChild(piece);
+      });
+    }
+
+    let pecaArrastada = null;
+
+    function arrastar(event) {
+      pecaArrastada = event.target;
+    }
+
+    function permitirSoltar(event) {
+      event.preventDefault();
+    }
+
+    function soltar(event) {
+      event.preventDefault();
+      const pecaSolta = event.target;
+
+      if (!pecaArrastada || !pecaSolta.classList.contains('puzzle-piece')) return;
+
+      const tempBg = pecaArrastada.style.backgroundPosition;
+      const tempOriginal = pecaArrastada.dataset.original;
+
+      pecaArrastada.style.backgroundPosition = pecaSolta.style.backgroundPosition;
+      pecaArrastada.dataset.original = pecaSolta.dataset.original;
+
+      pecaSolta.style.backgroundPosition = tempBg;
+      pecaSolta.dataset.original = tempOriginal;
+
+      verificarPuzzle(pecaSolta.closest('.puzzle-board').id.replace('puzzle', ''));
+    }
+
+    function verificarPuzzle(numero) {
+      const board = document.getElementById('puzzle' + numero);
+      const pecas = board.querySelectorAll('.puzzle-piece');
+      let completo = true;
+
+      pecas.forEach((peca, index) => {
+        if (Number(peca.dataset.original) !== index) {
+          completo = false;
+        }
+      });
+
+      if (completo) {
+        document.getElementById('puzzleMsg' + numero).innerHTML = 'Você conseguiu! 💖';
+        document.getElementById('nextPuzzle' + numero).style.display = 'inline-block';
+      }
+    }
+
+    let amor = 0;
+
+    function iniciarBarraAmor() {
+      amor = 0;
+      document.getElementById('heartFill').style.height = '0%';
+      document.getElementById('lovePercent').innerHTML = '0%';
+      document.getElementById('bigLoveMessage').style.display = 'none';
+      document.getElementById('bigLoveMessage').innerHTML = '';
+      document.getElementById('btnIrTexto').style.display = 'none';
+      mostrarPagina(15);
+    }
+
+    function clicarCoracao() {
+      if (amor >= 100) return;
+
+      amor += 5;
+      if (amor > 100) amor = 100;
+
+      document.getElementById('heartFill').style.height = amor + '%';
+      document.getElementById('lovePercent').innerHTML = amor + '%';
+
+      if (amor === 100) {
+        document.getElementById('bigLoveMessage').style.display = 'block';
+        document.getElementById('bigLoveMessage').innerHTML = 'Eu te amo 100%... aliás, muito mais que isso! ❤️';
+        document.getElementById('btnIrTexto').style.display = 'inline-block';
+      }
+    }
+
+    const textoRomantico = `Eu queria te lembrar de uma coisa...
+
+Você é uma das partes mais bonitas da minha vida.
+Cada risada, cada momento e cada detalhe seu ficam guardados em mim.
+
+E se eu fiz tudo isso, é porque você merece sentir o tamanho do meu amor por você. ❤️`;
+
+    let typingInterval;
+
+    function iniciarTextoDigitando() {
+      mostrarPagina(16);
+
+      const typingText = document.getElementById('typingText');
+      const btnIrSenha = document.getElementById('btnIrSenha');
+
+      typingText.innerHTML = '';
+      btnIrSenha.style.display = 'none';
+
+      let i = 0;
+      clearInterval(typingInterval);
+
+      typingInterval = setInterval(() => {
+        typingText.innerHTML += textoRomantico.charAt(i);
+        i++;
+
+        if (i >= textoRomantico.length) {
+          clearInterval(typingInterval);
+          btnIrSenha.style.display = 'inline-block';
+        }
+      }, 45);
+    }
+
+    const senhaCorreta = 'denguinho';
+    const dicasSenha = [
+      'Dica 1: É um apelido carinhoso 💌',
+      'Dica 2: Tem 9 letras ✨',
+      'Dica 3: Começa com D ❤️',
+      'Dica 4: É um jeitinho fofo de chamar alguém especial 💖',
+      'Dica 5: É uma palavra cheia de carinho e mimo 😏'
+    ];
+
+    let dicaAtual = 0;
+
+    function mostrarDicaSenha() {
+      const senhaDica = document.getElementById('senhaDica');
+      const btnDica = document.getElementById('btnDicaSenha');
+
+      senhaDica.innerHTML = dicasSenha[dicaAtual];
+      dicaAtual++;
+
+      const restantes = dicasSenha.length - dicaAtual;
+
+      if (restantes > 0) {
+        btnDica.innerHTML = `Dica 💡 (${restantes})`;
+      } else {
+        btnDica.innerHTML = 'Sem dicas 😏';
+        btnDica.disabled = true;
+      }
+    }
+
+    function verificarSenha() {
+      const input = document.getElementById('senhaInput');
+      const msg = document.getElementById('senhaMsg');
+      const senhaDigitada = input.value.toLowerCase().split(' ').join('');
+
+      if (senhaDigitada === senhaCorreta) {
+        msg.innerHTML = 'Senha certa! Meu coração foi desbloqueado 💖';
+        setTimeout(() => mostrarPagina(18), 900);
+      } else {
+        msg.innerHTML = 'Senha errada 😅 tenta de novo, amor!';
+      }
+    }
+
+    function abrirCarta() {
+      const envelope = document.getElementById('envelope');
+      envelope.classList.add('open');
+
+      musica.pause();
+      atualizarBotaoMusica();
+
+      setTimeout(() => {
+        videoSurpresa.play().catch(() => {
+          console.log('Clique no play do vídeo se o navegador bloquear.');
+        });
+      }, 1000);
+    }
+
+    videoSurpresa.addEventListener('ended', () => {
+      videoSurpresa.pause();
+      btnDepoisVideo.style.display = 'inline-block';
+    });
+
+    function irParaCartaFinal() {
+      videoSurpresa.pause();
+      videoSurpresa.currentTime = 0;
+      mostrarPagina(19);
+    }
+
+    function voltarParaVideo() {
+      mostrarPagina(18);
+
+      const envelope = document.getElementById('envelope');
+      envelope.classList.add('open');
+
+      btnDepoisVideo.style.display = 'none';
+
+      setTimeout(() => {
+        videoSurpresa.currentTime = 0;
+        videoSurpresa.play().catch(() => {
+          console.log('Clique no play do vídeo se o navegador bloquear.');
+        });
+      }, 500);
+    }
+
+    volumeControl.addEventListener('input', () => {
+      musica.volume = volumeControl.value;
+    });
+
+    musica.addEventListener('loadedmetadata', () => {
+      timeControl.max = musica.duration;
+    });
+
+    timeControl.addEventListener('input', () => {
+      musica.currentTime = timeControl.value;
+    });
+
+    musica.addEventListener('timeupdate', () => {
+      timeControl.value = musica.currentTime;
+      atualizarBotaoMusica();
+    });
+
+    musica.addEventListener('pause', atualizarBotaoMusica);
+    musica.addEventListener('play', atualizarBotaoMusica);
+
+    function criarCoracoes() {
+      const area = document.getElementById('hearts');
+      setInterval(() => {
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.innerHTML = '❤️';
+        h.style.left = Math.random() * 100 + 'vw';
+        h.style.fontSize = (20 + Math.random() * 20) + 'px';
+        h.style.animationDuration = (5 + Math.random() * 5) + 's';
+        area.appendChild(h);
+        setTimeout(() => h.remove(), 8000);
+      }, 300);
+    }
+
+    criarCoracoes();
+  </script>
+</body>
+</html>
